@@ -13,7 +13,6 @@ const App: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [responseMessage, setResponseMessage] = useState<string>("");
 
-
   // Fetch user attributes and S3 files on mount
   useEffect(() => {
     const fetchUserData = async () => {
@@ -34,10 +33,11 @@ const App: React.FC = () => {
         setUserAttributes({ username: '', phoneNumber: '' });
       } finally {
         setLoading(false);
-      }
+5      }
     };
+  }, []); // Note: Added empty dependency array to prevent infinite loop
 
-   const validateFile = (file: File | null): boolean => {
+  const validateFile = (file: File | null): boolean => {
     if (file && file.name.endsWith(".csv")) {
       return true;
     }
@@ -51,7 +51,7 @@ const App: React.FC = () => {
       return;
     }
 
-        const formData = new FormData();
+    const formData = new FormData();
     formData.append("file", file);
 
     try {
@@ -133,31 +133,30 @@ const App: React.FC = () => {
         <u>BBIL HR Dashboard Update Interface</u>
       </h1>
 
-          <div className="upload-section">
-            <h2>📤 Upload File</h2>
-            <input
-            type="file"
-            accept=".csv"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
-          />
-          <button
-            onClick={() => {
-              if (validateFile(file)) {
-                uploadFile(
-                  file,
-                  "https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev"
-                );
-              }
-            }}
-          >
-            Submit File
-          </button>
-        </p>
+      <div className="upload-section">
+        <h2>📤 Upload File</h2>
+        <input
+          type="file"
+          accept=".csv"
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
+        />
+        <button
+          onClick={() => {
+            if (validateFile(file)) {
+              uploadFile(
+                file,
+                "https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev"
+              );
+            }
+          }}
+        >
+          Submit File
+        </button>
         {responseMessage && (
           <p style={{ padding: "10px", color: responseMessage.includes("success") ? "green" : "red" }}>
             {responseMessage}
           </p>
-        </div>
+        )}
       </div>
     </main>
   );
