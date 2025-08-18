@@ -1,7 +1,9 @@
 import {  useState } from "react";
 import "./App.css";
+import { useAuthenticator } from '@aws-amplify/ui-react';
 
 function App() {
+  const { signOut } = useAuthenticator();
   const [file, setFile] = useState<File | null>(null);
   const [responseMessage, setResponseMessage] = useState<string>("");
 
@@ -42,48 +44,25 @@ function App() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
-      <main
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          width: "90vw",
-          backgroundColor: "#f8f8ff",
-        }}
-      >
-        <header style={{ width: "100%", display: "flex", alignItems: "center" }}>
-          <div
-            style={{
-              width: "130px",
-              height: "90px",
-              overflow: "hidden",
-              borderRadius: "8px",
-            }}
-          >
-            <img
-              style={{
-                padding: "10px",
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                objectPosition: "50% 50%",
-              }}
-              src="https://www.bharatbiotech.com/images/bharat-biotech-logo.jpg"
-              alt="Company Logo"
-              className="logo"
-            />
-          </div>
+     <header className="app-header">
+        <div style={{ width: '130px', height: '120px', overflow: 'hidden', borderRadius: '8px', marginLeft: '20px' }}>
+          <img
+            style={{ width: '100%', height: '100%', objectFit: 'contain', boxSizing: 'border-box' }}
+            src="https://www.bharatbiotech.com/images/bharat-biotech-logo.jpg"
+            alt="Company Logo"
+          />
+        </div>
+          <button style={{ marginLeft: 'auto', marginRight: '20px' }} onClick={signOut}>
+          Sign out
+        </button>
         </header>
 
         <h1 style={{ padding: "10px", textAlign: "center", width: "100vw" }}>
-          <u>Anamay - Dashboard Update Interface</u>
+          <u>HR- Dashboard Update Interface</u>
         </h1>
 
         {/* File Upload */}
         <div>
-          <h2>&emsp;&emsp;Anamay Stocks</h2>
           <p
             style={{
               padding: "10px",
