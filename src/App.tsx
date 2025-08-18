@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import "./App.css";
 
 function App() {
@@ -75,9 +75,6 @@ function App() {
               className="logo"
             />
           </div>
-          <button style={{ marginLeft: "auto", marginRight: "20px" }} onClick={signOut}>
-            Sign out
-          </button>
         </header>
 
         <h1 style={{ padding: "10px", textAlign: "center", width: "100vw" }}>
