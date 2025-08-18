@@ -6,3 +6,25 @@
   box-sizing: border-box;
   overflow-x: hidden;
 }
+.app-header {
+  display: flex;
+  max-height: 100px;
+  flex-direction: row;
+  align-items: center;
+  background-color: #008080;
+  color: white;
+  max-width: 100%;
+  padding: 4px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+.header-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
