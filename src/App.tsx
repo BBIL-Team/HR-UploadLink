@@ -1,41 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import { useAuthenticator } from '@aws-amplify/ui-react';
-import { getCurrentUser, fetchUserAttributes, updateUserAttributes } from '@aws-amplify/auth';
-
-// Debug logging to console
-console.log('getCurrentUser:', getCurrentUser);
-console.log('fetchUserAttributes:', fetchUserAttributes);
-console.log('updateUserAttributes:', updateUserAttributes);
 
 const App: React.FC = () => {
   const { signOut } = useAuthenticator();
   const [file, setFile] = useState<File | null>(null);
   const [responseMessage, setResponseMessage] = useState<string>("");
-
-  // Fetch user attributes and S3 files on mount
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setLoading(true);
-        await getCurrentUser();
-        const attributes = await fetchUserAttributes();
-        console.log('User attributes:', attributes);
-        const username = attributes.preferred_username || attributes.email || '';
-        const phoneNumber = attributes.phone_number || '';
-        const maskedPhoneNumber =
-          phoneNumber && phoneNumber.length >= 2
-            ? `91${'x'.repeat(phoneNumber.length - 4)}${phoneNumber.slice(-2)}`
-            : '';
-        setUserAttributes({ username, phoneNumber: maskedPhoneNumber });
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        setUserAttributes({ username: '', phoneNumber: '' });
-      } finally {
-        setLoading(false);
-5      }
-    };
-  }, []); // Note: Added empty dependency array to prevent infinite loop
 
   const validateFile = (file: File | null): boolean => {
     if (file && file.name.endsWith(".csv")) {
@@ -83,51 +53,11 @@ const App: React.FC = () => {
             alt="Company Logo"
           />
         </div>
-        <div className="header-user-info">
-          {isLoading ? (
-            <span>Loading...</span>
-          ) : (
-            <div className="user-info-inner">
-              <span className="username">
-                {userAttributes.username ? (
-                  `Hi, ${userAttributes.username}`
-                ) : (
-                  <button className="update-username-btn" onClick={() => setShowUpdateForm(true)}>
-                    Update Username
-                  </button>
-                )}
-              </span>
-              <span className="phone-number">{userAttributes.phoneNumber || 'Phone: Not set'}</span>
-            </div>
-          )}
           <button className="sign-out-btn" onClick={signOut}>
             Sign out
           </button>
         </div>
       </header>
-
-      {showUpdateForm && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2 style={{ fontSize: '22px', margin: '0 0 16px 0' }}>Update Username</h2>
-            <form onSubmit={handleUpdateUsername}>
-              <input
-                type="text"
-                value={newUsername}
-                onChange={(e) => setNewUsername(e.target.value)}
-                placeholder="Enter new username"
-                className="username-input"
-              />
-              <div className="modal-buttons">
-                <button type="submit" className="submit-btn">Submit</button>
-                <button type="button" className="cancel-btn" onClick={() => setShowUpdateForm(false)}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       <h1 className="app-title">
         <u>BBIL HR Dashboard Update Interface</u>
