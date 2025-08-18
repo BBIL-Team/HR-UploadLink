@@ -1,4 +1,4 @@
-import {  useState } from "react";
+import { useState } from "react";
 import "./App.css";
 import { useAuthenticator } from '@aws-amplify/ui-react';
 
@@ -45,7 +45,7 @@ function App() {
 
   return (
     <main>
-     <header className="app-header">
+      <header className="app-header">
         <div style={{ width: '130px', height: '120px', overflow: 'hidden', borderRadius: '8px', marginLeft: '20px' }}>
           <img
             style={{ width: '100%', height: '100%', objectFit: 'contain', boxSizing: 'border-box' }}
@@ -53,54 +53,52 @@ function App() {
             alt="Company Logo"
           />
         </div>
-          <button style={{ marginLeft: 'auto', marginRight: '20px' }} onClick={signOut}>
+        <button style={{ marginLeft: 'auto', marginRight: '20px' }} onClick={signOut}>
           Sign out
         </button>
-        </header>
+      </header>
 
-        <h1 style={{ padding: "10px", textAlign: "center", width: "100vw" }}>
-          <u>HR- Dashboard Update Interface</u>
-        </h1>
+      <h1 style={{ padding: "10px", textAlign: "center", width: "100vw" }}>
+        <u>HR- Dashboard Update Interface</u>
+      </h1>
 
-        {/* File Upload */}
-        <div>
-          <p
-            style={{
-              padding: "10px",
-              backgroundColor: "#e6e6e6",
-              borderRadius: "8px",
-              width: "50vw",
-              height: "70px",
+      {/* File Upload */}
+      <div>
+        <p
+          style={{
+            padding: "10px",
+            backgroundColor: "#e6e6e6",
+            borderRadius: "8px",
+            width: "50vw",
+            height: "70px",
+          }}
+        >
+          &emsp;&emsp;&emsp;&emsp;
+          <input
+            type="file"
+            accept=".csv"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+          />
+          <button
+            onClick={() => {
+              if (validateFile(file)) {
+                uploadFile(
+                  file,
+                  "https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev"
+                );
+              }
             }}
           >
-            &emsp;&emsp;&emsp;&emsp;
-            <input
-              type="file"
-              accept=".csv"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-            />
-            <button
-              onClick={() => {
-                if (validateFile(file)) {
-                  uploadFile(
-                    file,
-                    "https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev"
-                  );
-                }
-              }}
-            >
-              Submit File
-            </button>
+            Submit File
+          </button>
+        </p>
+        {responseMessage && (
+          <p style={{ padding: "10px", color: responseMessage.includes("success") ? "green" : "red" }}>
+            {responseMessage}
           </p>
-          {responseMessage && (
-            <p style={{ padding: "10px", color: responseMessage.includes("success") ? "green" : "red" }}>
-              {responseMessage}
-            </p>
-          )}
-        </div>
-      </main>
-    </div>
-    );
+        )}
+      </div>
+    </main>
   );
 }
 
