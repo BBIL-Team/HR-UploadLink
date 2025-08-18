@@ -45,7 +45,7 @@ function App() {
 
   return (
     <main className="app-main">
-      <header>
+      <header className="app-header">
         <div style={{ width: '130px', height: '120px', overflow: 'hidden', borderRadius: '8px', marginLeft: '20px' }}>
           <img
             style={{ width: '100%', height: '100%', objectFit: 'contain', boxSizing: 'border-box' }}
