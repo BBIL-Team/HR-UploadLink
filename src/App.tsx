@@ -44,7 +44,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <main className="app-main">
+    <div> {/* Added a single parent div */}
       <header className="app-header">
         <div style={{ width: '130px', height: '120px', overflow: 'hidden', borderRadius: '8px', marginLeft: '20px' }}>
           <img
@@ -53,42 +53,43 @@ const App: React.FC = () => {
             alt="Company Logo"
           />
         </div>
-          <button className="sign-out-btn" onClick={signOut}>
-            Sign out
-          </button>
-        </div>
+        <button className="sign-out-btn" onClick={signOut}>
+          Sign out
+        </button>
       </header>
 
-      <h1 className="app-title">
-        <u>BBIL HR Dashboard Update Interface</u>
-      </h1>
+      <main className="app-main">
+        <h1 className="app-title">
+          <u>BBIL HR Dashboard Update Interface</u>
+        </h1>
 
-      <div className="upload-section">
-        <h2>📤 Upload File</h2>
-        <input
-          type="file"
-          accept=".csv"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-        />
-        <button
-          onClick={() => {
-            if (validateFile(file)) {
-              uploadFile(
-                file,
-                "https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev"
-              );
-            }
-          }}
-        >
-          Submit File
-        </button>
-        {responseMessage && (
-          <p style={{ padding: "10px", color: responseMessage.includes("success") ? "green" : "red" }}>
-            {responseMessage}
-          </p>
-        )}
-      </div>
-    </main>
+        <div className="upload-section">
+          <h2>📤 Upload File</h2>
+          <input
+            type="file"
+            accept=".csv"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+          />
+          <button
+            onClick={() => {
+              if (validateFile(file)) {
+                uploadFile(
+                  file,
+                  "https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev"
+                );
+              }
+            }}
+          >
+            Submit File
+          </button>
+          {responseMessage && (
+            <p style={{ padding: "10px", color: responseMessage.includes("success") ? "green" : "red" }}>
+              {responseMessage}
+            </p>
+          )}
+        </div>
+      </main>
+    </div>
   );
 };
 
