@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { useAuthenticator } from '@aws-amplify/ui-react';
+import { Auth } from 'aws-amplify';
 
 // Define supported file extensions
 const SUPPORTED_EXTENSIONS = ['.csv', '.pdf', '.xlsx', '.xls', '.doc', '.docx'];
@@ -20,14 +21,29 @@ const App: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [showUpdateForm, setShowUpdateForm] = useState<boolean>(false);
+  const [newUsername, setNewUsername] = useState<string>('');
 
-  // Populate userAttributes from useAuthenticator
+  // Fetch user attributes using Auth.currentAuthenticatedUser
   useEffect(() => {
-    if (user && user.attributes) {
-      setUserAttributes({
-        username: user.attributes.preferred_username || user.username || '',
-        phoneNumber: user.attributes.phone_number || '',
-      });
+    const fetchUserAttributes = async () => {
+      try {
+        const currentUser = await Auth.currentAuthenticatedUser();
+        if (currentUser) {
+          const attributes = await Auth.userAttributes(currentUser);
+          const username = attributes.find(attr => attr.Name === 'preferred_username')?.Value || currentUser.username || '';
+          const phoneNumber = attributes.find(attr => attr.Name === 'phone_number')?.Value || '';
+          setUserAttributes({ username, phoneNumber });
+        }
+      } catch (error) {
+        console.error('Error fetching user attributes:', error);
+        setModalMessage('Failed to fetch user attributes.');
+        setModalType('error');
+        setShowMessageModal(true);
+      }
+    };
+
+    if (user) {
+      fetchUserAttributes();
     }
   }, [user]);
 
@@ -97,6 +113,34 @@ const App: React.FC = () => {
     }
   };
 
+  // Handle username update
+  const handleUpdateUsername = async () => {
+    if (!newUsername) {
+      setModalMessage('Please enter a valid username.');
+      setModalType('error');
+      setShowMessageModal(true);
+      return;
+    }
+
+    try {
+      const currentUser = await Auth.currentAuthenticatedUser();
+      await Auth.updateUserAttributes(currentUser, {
+        'preferred_username': newUsername,
+      });
+      setUserAttributes((prev) => ({ ...prev, username: newUsername }));
+      setModalMessage('Username updated successfully!');
+      setModalType('success');
+      setShowMessageModal(true);
+      setShowUpdateForm(false);
+      setNewUsername('');
+    } catch (error) {
+      console.error('Error updating username:', error);
+      setModalMessage('Failed to update username. Please try again.');
+      setModalType('error');
+      setShowMessageModal(true);
+    }
+  };
+
   // Close modal
   const closeModal = () => {
     setShowMessageModal(false);
@@ -137,7 +181,6 @@ const App: React.FC = () => {
       <div className="upload-section">
         <h2>📤 Upload File</h2>
         <div className="upload-form">
-          {/* Example month selector (replace with your actual implementation) */}
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
@@ -177,6 +220,26 @@ const App: React.FC = () => {
             <h3>{modalType === 'error' ? 'Error' : 'Success'}</h3>
             <p>{modalMessage}</p>
             <button onClick={closeModal}>Close</button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for updating username */}
+      {showUpdateForm && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>Update Username</h3>
+            <input
+              type="text"
+              value={newUsername}
+              onChange={(e) => setNewUsername(e.target.value)}
+              placeholder="Enter new username"
+              className="username-input"
+            />
+            <div>
+              <button onClick={handleUpdateUsername}>Save</button>
+              <button onClick={() => setShowUpdateForm(false)}>Cancel</button>
+            </div>
           </div>
         </div>
       )}
