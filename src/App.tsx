@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 
@@ -6,7 +6,7 @@ import { useAuthenticator } from '@aws-amplify/ui-react';
 const SUPPORTED_EXTENSIONS = ['.csv', '.pdf', '.xlsx', '.xls', '.doc', '.docx'];
 
 const App: React.FC = () => {
-  const { signOut, user } = useAuthenticator((context) => [context.signOut, context.user]);
+  const { signOut } = useAuthenticator((context) => [context.signOut]);
   
   // State definitions
   const [file, setFile] = useState<File | null>(null);
@@ -15,7 +15,6 @@ const App: React.FC = () => {
   const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
   const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [showUpdateForm, setShowUpdateForm] = useState<boolean>(false);
 
   // Validate file extension
   const validateFile = (file: File | null): boolean => {
@@ -61,7 +60,7 @@ const App: React.FC = () => {
         },
         body: JSON.stringify({
           fileName: file.name,
-          uploadedBy: userAttributes.username || 'Unknown',
+          uploadedBy: 'Unknown', // Replaced userAttributes.username with static value
         }),
       });
 
