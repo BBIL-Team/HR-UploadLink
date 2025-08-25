@@ -243,7 +243,7 @@ html, body {
   box-sizing: border-box;
 }
 
-.calendar-section h2, .upload-section h2 {
+.calendar-section h2, .upload-section h2, .download-section {
   font-size: 22px;
   margin: 0 0 16px;
   text-align: center;
