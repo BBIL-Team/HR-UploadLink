@@ -5,6 +5,7 @@ import { fetchUserAttributes } from '@aws-amplify/auth';
 
 // Hardcoded bucket and folder names
 const BUCKET_NAME = 'production-bbil';
+const FOLDER_NAME = 'Production_daily_upload_files_location/';
 const SAMPLE_FILE_KEY = 'Production_Sample_Files/Sample_File.csv';
 
 // Supported file extensions
@@ -207,41 +208,42 @@ const App: React.FC = () => {
 
       <h1 className="app-title"><u>BBIL File Upload Interface</u></h1>
 
-      <div className="container" style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <div className="upload-section" style={{ width: '45%' }}>
-          <h2>📤 Upload File</h2>
-          <div className="upload-form">
-            <input
-              type="file"
-              accept=".csv,.pdf,.xlsx,.xls,.doc,.docx"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="file-input"
-              disabled={isUploading}
-            />
-            <button
-              className="upload-btn"
-              onClick={() => {
-                if (validateFile(file)) {
-                  uploadFile(file);
-                }
-              }}
-              disabled={isUploading}
-            >
-              {isUploading ? 'Uploading...' : 'Submit File'}
-            </button>
+      <div className="file-section">
+        <div className="file-section-inner">
+          <div className="upload-section">
+            <h2>📤 Upload File</h2>
+            <div className="upload-form">
+              <input
+                type="file"
+                accept=".csv,.pdf,.xlsx,.xls,.doc,.docx"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                className="file-input"
+                disabled={isUploading}
+              />
+              <button
+                className="upload-btn"
+                onClick={() => {
+                  if (validateFile(file)) {
+                    uploadFile(file);
+                  }
+                }}
+                disabled={isUploading}
+              >
+                {isUploading ? 'Uploading...' : 'Submit File'}
+              </button>
+            </div>
           </div>
-        </div>
-
-        <div className="download-section" style={{ width: '45%' }}>
-          <h2>📥 Download Sample File</h2>
-          <div className="download-form">
-            <button
-              className="download-btn"
-              onClick={downloadFile}
-              disabled={isUploading}
-            >
-              Download Sample CSV
-            </button>
+          <div className="download-section">
+            <h2>📥 Download Sample File</h2>
+            <div className="download-form">
+              <button
+                className="download-btn"
+                onClick={downloadFile}
+                disabled={isUploading}
+              >
+                Download Sample CSV
+              </button>
+            </div>
           </div>
         </div>
       </div>
