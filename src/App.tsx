@@ -1,91 +1,119 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import { useAuthenticator } from '@aws-amplify/ui-react';
+import { fetchUserAttributes } from '@aws-amplify/auth';
 
-// Define supported file extensions
+// Hardcoded bucket and folder names
+const BUCKET_NAME = 'production-bbil';
+const FOLDER_NAME = 'Production_daily_upload_files_location/';
+
+// Supported file extensions
 const SUPPORTED_EXTENSIONS = ['.csv', '.pdf', '.xlsx', '.xls', '.doc', '.docx'];
 
 const App: React.FC = () => {
-  const { signOut } = useAuthenticator((context) => [context.signOut]);
-  
-  // State definitions
+  const { signOut } = useAuthenticator();
   const [file, setFile] = useState<File | null>(null);
-  const [modalMessage, setModalMessage] = useState<string>('');
-  const [modalType, setModalType] = useState<'error' | 'success'>('error');
-  const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
-  const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
+  const [modalMessage, setModalMessage] = useState<string>("");
+  const [modalType, setModalType] = useState<'success' | 'error'>('success');
+  const [userAttributes, setUserAttributes] = useState<{ username?: string }>({ username: '' });
+
+  // Fetch user attributes on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const attributes = await fetchUserAttributes();
+        const username = attributes.preferred_username || attributes.email || '';
+        setUserAttributes({ username });
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setUserAttributes({ username: '' });
+      }
+    };
+    fetchUserData();
+  }, []);
+
+  // Manage body scroll when modal is open
+  useEffect(() => {
+    if (showMessageModal || isUploading) {
+      const scrollY = window.scrollY;
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+    };
+  }, [showMessageModal, isUploading]);
 
   // Validate file extension
   const validateFile = (file: File | null): boolean => {
-    if (!file) {
-      setModalMessage('Please upload a valid file.');
-      setModalType('error');
-      setShowMessageModal(true);
-      return false;
+    if (file) {
+      const extension = (file.name.split('.').pop() || '').toLowerCase();
+      if (SUPPORTED_EXTENSIONS.includes(`.${extension}`)) {
+        return true;
+      }
     }
-    const extension = `.${file.name.split('.').pop()?.toLowerCase() || ''}`;
-    if (!SUPPORTED_EXTENSIONS.includes(extension)) {
-      setModalMessage('Please upload a valid file (.csv, .pdf, .xlsx, .xls, .doc, .docx).');
-      setModalType('error');
-      setShowMessageModal(true);
-      return false;
-    }
-    return true;
+    setModalMessage("Please upload a valid file (.csv, .pdf, .xlsx, .xls, .doc, .docx).");
+    setModalType('error');
+    setShowMessageModal(true);
+    return false;
   };
 
   // Handle file upload
-  const uploadFile = async (file: File | null, apiUrl: string) => {
+  const uploadFile = async (file: File | null) => {
     if (!file) {
-      setModalMessage('Please select a file to upload.');
+      setModalMessage("Please select a file to upload.");
       setModalType('error');
       setShowMessageModal(true);
       return;
     }
 
-    if (!selectedMonth) {
-      setModalMessage('Please select the correct month.');
-      setModalType('error');
-      setShowMessageModal(true);
-      return;
-    }
-
-    setIsUploading(true);
+    const originalFileName = file.name;
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('fileName', originalFileName);
+    formData.append('username', userAttributes.username || 'Unknown');
 
     try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fileName: file.name,
-          uploadedBy: 'Unknown', // Replaced userAttributes.username with static value
-        }),
+      setIsUploading(true);
+      const uploadResponse = await fetch('https://djtdjzbdtj.execute-api.ap-south-1.amazonaws.com/P1/Production_Uploadlink', {
+        method: "POST",
+        body: formData,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+      if (uploadResponse.ok) {
+        const uploadData = await uploadResponse.json();
+        setModalMessage(uploadData.message || "File uploaded successfully!");
+        setModalType('success');
+        setShowMessageModal(true);
+        setFile(null);
+      } else {
+        const errorData = await uploadResponse.json();
+        setModalMessage(errorData.message || errorData.error || `Failed to upload file: ${uploadResponse.statusText}`);
+        setModalType('error');
+        setShowMessageModal(true);
       }
-
-      const uploadData = await response.json();
-      setModalMessage(uploadData.message || 'File uploaded successfully!');
-      setModalType('success');
-      setShowMessageModal(true);
-    } catch (error) {
-      console.error('Error saving to DynamoDB:', error);
-      setModalMessage('Failed to upload file. Please try again.');
+    } catch (error: any) {
+      console.error("Error:", error);
+      setModalMessage(`An error occurred while uploading the file: ${error.message || 'Unknown error'}`);
       setModalType('error');
       setShowMessageModal(true);
     } finally {
       setIsUploading(false);
     }
-  };
-
-  // Close modal
-  const closeModal = () => {
-    setShowMessageModal(false);
-    setModalMessage('');
   };
 
   return (
@@ -98,29 +126,43 @@ const App: React.FC = () => {
             alt="Company Logo"
           />
         </div>
-        <button className="sign-out-btn" onClick={signOut}>
-          Sign out
-        </button>
+        <div className="header-user-info">
+          <span className="username">Hi, {userAttributes.username || 'User'}</span>
+          <button className="sign-out-btn" onClick={signOut}>Sign out</button>
+        </div>
       </header>
 
-      <h1 className="app-title">
-        <u>BBIL Production Dashboard Update Interface</u>
-      </h1>
+      {showMessageModal && (
+        <div className="modal-overlay">
+          <div className="modal-content message-modal">
+            <span className={`modal-icon ${modalType === 'success' ? 'success-icon' : 'error-icon'}`}>
+              {modalType === 'success' ? '✅' : '❌'}
+            </span>
+            <h3 className="modal-title">{modalType === 'success' ? 'Success' : 'Error'}</h3>
+            <p className={`message-text ${modalType === 'success' ? 'success-text' : 'error-text'}`}>
+              {modalMessage}
+            </p>
+            <button className="ok-btn" onClick={() => setShowMessageModal(false)}>OK</button>
+          </div>
+        </div>
+      )}
+
+      {isUploading && (
+        <div className="modal-overlay">
+          <div className="modal-content loading-modal">
+            <p className="loading-text">Uploading...</p>
+            <div className="progress-bar">
+              <div className="progress-fill"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <h1 className="app-title"><u>BBIL File Upload Interface</u></h1>
 
       <div className="upload-section">
         <h2>📤 Upload File</h2>
         <div className="upload-form">
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="month-selector"
-            disabled={isUploading}
-          >
-            <option value="">Select Month</option>
-            <option value="January">January</option>
-            <option value="February">February</option>
-            {/* Add other months as needed */}
-          </select>
           <input
             type="file"
             accept=".csv,.pdf,.xlsx,.xls,.doc,.docx"
@@ -132,7 +174,7 @@ const App: React.FC = () => {
             className="upload-btn"
             onClick={() => {
               if (validateFile(file)) {
-                uploadFile(file, 'https://djtdjzbdtj.execute-api.ap-south-1.amazonaws.com/P1/Production_Uploadlink');
+                uploadFile(file);
               }
             }}
             disabled={isUploading}
@@ -141,17 +183,6 @@ const App: React.FC = () => {
           </button>
         </div>
       </div>
-
-      {/* Modal for displaying messages */}
-      {showMessageModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>{modalType === 'error' ? 'Error' : 'Success'}</h3>
-            <p>{modalMessage}</p>
-            <button onClick={closeModal}>Close</button>
-          </div>
-        </div>
-      )}
     </main>
   );
 };
