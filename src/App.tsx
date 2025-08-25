@@ -3,6 +3,11 @@ import './App.css';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { fetchUserAttributes } from '@aws-amplify/auth';
 
+// Hardcoded bucket and folder names
+const BUCKET_NAME = 'production-bbil';
+const FOLDER_NAME = 'Production_daily_upload_files_location/';
+const SAMPLE_FILE_KEY = 'Production_Sample_Files/Sample_File.csv';
+
 // Supported file extensions
 const SUPPORTED_EXTENSIONS = ['.csv', '.pdf', '.xlsx', '.xls', '.doc', '.docx'];
 
@@ -112,6 +117,53 @@ const App: React.FC = () => {
     }
   };
 
+  // Handle file download
+  const downloadFile = async () => {
+    try {
+      const response = await fetch('https://e3blv3dko6.execute-api.ap-south-1.amazonaws.com/P1/presigned_urls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bucket_name: BUCKET_NAME,
+          file_key: SAMPLE_FILE_KEY,
+          action: 'download',
+          isSample: true
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.presigned_url) {
+          const link = document.createElement('a');
+          link.href = data.presigned_url;
+          link.download = SAMPLE_FILE_KEY.split('/').pop() || 'Sample_File.csv';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setModalMessage(`Downloaded ${SAMPLE_FILE_KEY.split('/').pop()} successfully!`);
+          setModalType('success');
+          setShowMessageModal(true);
+        } else {
+          setModalMessage('Failed to fetch download link.');
+          setModalType('error');
+          setShowMessageModal(true);
+        }
+      } else {
+        const errorData = await response.json();
+        setModalMessage(`Error: ${errorData.error || 'Failed to fetch download link'} (Status: ${response.status})`);
+        setModalType('error');
+        setShowMessageModal(true);
+      }
+    } catch (error: any) {
+      console.error('Download error:', error);
+      setModalMessage(`An error occurred while fetching the download link: ${error.message}`);
+      setModalType('error');
+      setShowMessageModal(true);
+    }
+  };
+
   return (
     <main className="app-main">
       <header className="app-header">
@@ -156,27 +208,42 @@ const App: React.FC = () => {
 
       <h1 className="app-title"><u>BBIL File Upload Interface</u></h1>
 
-      <div className="upload-section">
-        <h2>📤 Upload File</h2>
-        <div className="upload-form">
-          <input
-            type="file"
-            accept=".csv,.pdf,.xlsx,.xls,.doc,.docx"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
-            className="file-input"
-            disabled={isUploading}
-          />
-          <button
-            className="upload-btn"
-            onClick={() => {
-              if (validateFile(file)) {
-                uploadFile(file);
-              }
-            }}
-            disabled={isUploading}
-          >
-            {isUploading ? 'Uploading...' : 'Submit File'}
-          </button>
+      <div className="container" style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div className="upload-section" style={{ width: '45%' }}>
+          <h2>📤 Upload File</h2>
+          <div className="upload-form">
+            <input
+              type="file"
+              accept=".csv,.pdf,.xlsx,.xls,.doc,.docx"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              className="file-input"
+              disabled={isUploading}
+            />
+            <button
+              className="upload-btn"
+              onClick={() => {
+                if (validateFile(file)) {
+                  uploadFile(file);
+                }
+              }}
+              disabled={isUploading}
+            >
+              {isUploading ? 'Uploading...' : 'Submit File'}
+            </button>
+          </div>
+        </div>
+
+        <div className="download-section" style={{ width: '45%' }}>
+          <h2>📥 Download Sample File</h2>
+          <div className="download-form">
+            <button
+              className="download-btn"
+              onClick={downloadFile}
+              disabled={isUploading}
+            >
+              Download Sample CSV
+            </button>
+          </div>
         </div>
       </div>
     </main>
