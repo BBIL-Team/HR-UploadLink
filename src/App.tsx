@@ -5,7 +5,6 @@ import { fetchUserAttributes } from '@aws-amplify/auth';
 
 // Hardcoded bucket and folder names
 const BUCKET_NAME = 'production-bbil';
-const FOLDER_NAME = 'Production_daily_upload_files_location/';
 const SAMPLE_FILE_KEY = 'Production_Sample_Files/Sample_File.csv';
 
 // Supported file extensions
