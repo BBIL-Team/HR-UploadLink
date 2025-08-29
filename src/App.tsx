@@ -9,7 +9,10 @@ const SAMPLE_FILES = {
   darwinbox: { key: 'Production_Sample_Files/Darwinbox_Tickets.csv', name: 'Darwinbox_Tickets.csv' },
   attrition: { key: 'Production_Sample_Files/Attrition_Tracker.csv', name: 'Attrition_Tracker.csv' },
   contract: { key: 'Production_Sample_Files/Contract_to_Hire.csv', name: 'Contract_to_Hire.csv' },
-};
+} as const;
+
+// Define the type for the keys of SAMPLE_FILES
+type SampleFileType = keyof typeof SAMPLE_FILES;
 
 // Supported file extensions
 const SUPPORTED_EXTENSIONS = ['.csv', '.pdf', '.xlsx', '.xls', '.doc', '.docx'];
@@ -22,7 +25,7 @@ const App: React.FC = () => {
   const [modalMessage, setModalMessage] = useState<string>("");
   const [modalType, setModalType] = useState<'success' | 'error'>('success');
   const [userAttributes, setUserAttributes] = useState<{ username?: string }>({ username: '' });
-  const [selectedFileType, setSelectedFileType] = useState<string>("");
+  const [selectedFileType, setSelectedFileType] = useState<SampleFileType | "">("");
 
   // Fetch user attributes on mount
   useEffect(() => {
@@ -169,7 +172,7 @@ const App: React.FC = () => {
   };
 
   // File type options for the download segment
-  const fileTypes = [
+  const fileTypes: { label: string; key: SampleFileType }[] = [
     { label: 'Darwinbox Tickets', key: 'darwinbox' },
     { label: 'Attrition Tracker', key: 'attrition' },
     { label: 'Contract to Hire', key: 'contract' },
