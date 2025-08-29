@@ -1,67 +1,277 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import './App.css';
+import { useAuthenticator } from '@aws-amplify/ui-react';
+import { fetchUserAttributes } from '@aws-amplify/auth';
+
+// Hardcoded bucket and folder names
+const BUCKET_NAME = 'production-bbil';
+const SAMPLE_FILES = {
+  darwinbox: 'Production_Sample_Files/Darwinbox_Tickets.csv',
+  attrition: 'Production_Sample_Files/Attrition_Tracker.csv',
+  contract: 'Production_Sample_Files/Contract_to_Hire.csv',
+};
+
+// Supported file extensions
+const SUPPORTED_EXTENSIONS = ['.csv', '.pdf', '.xlsx', '.xls', '.doc', '.docx'];
 
 const App: React.FC = () => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const { signOut } = useAuthenticator();
+  const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
+  const [modalMessage, setModalMessage] = useState<string>("");
+  const [modalType, setModalType] = useState<'success' | 'error'>('success');
+  const [userAttributes, setUserAttributes] = useState<{ username?: string }>({ username: '' });
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      setSelectedFile(event.target.files[0]);
-    }
-  };
+  // Fetch user attributes on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const attributes = await fetchUserAttributes();
+        const username = attributes.preferred_username || attributes.email || '';
+        setUserAttributes({ username });
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setUserAttributes({ username: '' });
+      }
+    };
+    fetchUserData();
+  }, []);
 
-  const handleUpload = () => {
-    if (selectedFile) {
-      // Simulate file upload logic
-      alert(`Uploading file: ${selectedFile.name}`);
+  // Manage body scroll when modal is open
+  useEffect(() => {
+    if (showMessageModal || isUploading) {
+      const scrollY = window.scrollY;
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
     } else {
-      alert('Please select a file to upload');
+      const scrollY = document.body.style.top;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+    };
+  }, [showMessageModal, isUploading]);
+
+  // Validate file extension
+  const validateFile = (file: File | null): boolean => {
+    if (file) {
+      const extension = (file.name.split('.').pop() || '').toLowerCase();
+      if (SUPPORTED_EXTENSIONS.includes(`.${extension}`)) {
+        return true;
+      }
+    }
+    setModalMessage("Please upload a valid file (.csv, .pdf, .xlsx, .xls, .doc, .docx).");
+    setModalType('error');
+    setShowMessageModal(true);
+    return false;
+  };
+
+  // Handle file upload
+  const uploadFile = async (file: File | null) => {
+    if (!file) {
+      setModalMessage("Please select a file to upload.");
+      setModalType('error');
+      setShowMessageModal(true);
+      return;
+    }
+
+    const originalFileName = file.name;
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('fileName', originalFileName);
+    formData.append('username', userAttributes.username || 'Unknown');
+
+    try {
+      setIsUploading(true);
+      const uploadResponse = await fetch('https://djtdjzbdtj.execute-api.ap-south-1.amazonaws.com/P1/Production_Uploadlink', {
+        method: "POST",
+        body: formData,
+      });
+
+      if (uploadResponse.ok) {
+        const uploadData = await uploadResponse.json();
+        setModalMessage(uploadData.message || "File uploaded successfully!");
+        setModalType('success');
+        setShowMessageModal(true);
+        setFile(null);
+      } else {
+        const errorData = await uploadResponse.json();
+        setModalMessage(errorData.message || errorData.error || `Failed to upload file: ${uploadResponse.statusText}`);
+        setModalType('error');
+        setShowMessageModal(true);
+      }
+    } catch (error: any) {
+      console.error("Error:", error);
+      setModalMessage(`An error occurred while uploading the file: ${error.message || 'Unknown error'}`);
+      setModalType('error');
+      setShowMessageModal(true);
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  const handleDownload = () => {
-    // Simulate file download logic
-    const dummyFileUrl = 'https://example.com/sample-file.txt';
-    const link = document.createElement('a');
-    link.href = dummyFileUrl;
-    link.download = 'sample-file.txt';
-    link.click();
+  // Handle file download
+  const downloadFile = async (fileKey: string, fileName: string) => {
+    try {
+      const response = await fetch('https://e3blv3dko6.execute-api.ap-south-1.amazonaws.com/P1/presigned_urls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bucket_name: BUCKET_NAME,
+          file_key: fileKey,
+          action: 'download',
+          isSample: true
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.presigned_url) {
+          const link = document.createElement('a');
+          link.href = data.presigned_url;
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setModalMessage(`Downloaded ${fileName} successfully!`);
+          setModalType('success');
+          setShowMessageModal(true);
+        } else {
+          setModalMessage('Failed to fetch download link.');
+          setModalType('error');
+          setShowMessageModal(true);
+        }
+      } else {
+        const errorData = await response.json();
+        setModalMessage(`Error: ${errorData.error || 'Failed to fetch download link'} (Status: ${response.status})`);
+        setModalType('error');
+        setShowMessageModal(true);
+      }
+    } catch (error: any) {
+      console.error('Download error:', error);
+      setModalMessage(`An error occurred while fetching the download link: ${error.message}`);
+      setModalType('error');
+      setShowMessageModal(true);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      {/* Left Side: Download Segment */}
-      <div className="w-1/2 p-8 bg-white shadow-lg">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Download Files</h2>
-        <p className="mb-4 text-gray-600">Click below to download the sample file:</p>
-        <button
-          onClick={handleDownload}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-        >
-          Download Sample File
-        </button>
-      </div>
-
-      {/* Right Side: File Upload Segment */}
-      <div className="w-1/2 p-8 bg-gray-50">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Upload Files</h2>
-        <div className="mb-4">
-          <input
-            type="file"
-            onChange={handleFileChange}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+    <main className="app-main">
+      <header className="app-header">
+        <div style={{ width: '130px', height: '120px', overflow: 'hidden', borderRadius: '8px', marginLeft: '20px' }}>
+          <img
+            style={{ width: '100%', height: '100%', objectFit: 'contain', boxSizing: 'border-box' }}
+            src="https://www.bharatbiotech.com/images/bharat-biotech-logo.jpg"
+            alt="Company Logo"
           />
         </div>
-        {selectedFile && (
-          <p className="mb-4 text-gray-600">Selected file: {selectedFile.name}</p>
-        )}
-        <button
-          onClick={handleUpload}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
-        >
-          Upload File
-        </button>
+        <div className="header-user-info">
+          <span className="username">Hi, {userAttributes.username || 'User'}</span>
+          <button className="sign-out-btn" onClick={signOut}>Sign out</button>
+        </div>
+      </header>
+
+      {showMessageModal && (
+        <div className="modal-overlay">
+          <div className="modal-content message-modal">
+            <span className={`modal-icon ${modalType === 'success' ? 'success-icon' : 'error-icon'}`}>
+              {modalType === 'success' ? '✅' : '❌'}
+            </span>
+            <h3 className="modal-title">{modalType === 'success' ? 'Success' : 'Error'}</h3>
+            <p className={`message-text ${modalType === 'success' ? 'success-text' : 'error-text'}`}>
+              {modalMessage}
+            </p>
+            <button className="ok-btn" onClick={() => setShowMessageModal(false)}>OK</button>
+          </div>
+        </div>
+      )}
+
+      {isUploading && (
+        <div className="modal-overlay">
+          <div className="modal-content loading-modal">
+            <p className="loading-text">Uploading...</p>
+            <div className="progress-bar">
+              <div className="progress-fill"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <h1 className="app-title"><u>BBIL File Interface</u></h1>
+
+      <div className="file-section" style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
+        <div className="download-section" style={{ flex: 1, maxWidth: '45%' }}>
+          <h2>📥 Download Sample Files</h2>
+          <div className="download-form" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div className="download-box" style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px' }}>
+              <h3>Darwinbox Tickets</h3>
+              <button
+                className="download-btn"
+                onClick={() => downloadFile(SAMPLE_FILES.darwinbox, 'Darwinbox_Tickets.csv')}
+                disabled={isUploading}
+              >
+                Download
+              </button>
+            </div>
+            <div className="download-box" style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px' }}>
+              <h3>Attrition Tracker</h3>
+              <button
+                className="download-btn"
+                onClick={() => downloadFile(SAMPLE_FILES.attrition, 'Attrition_Tracker.csv')}
+                disabled={isUploading}
+              >
+                Download
+              </button>
+            </div>
+            <div className="download-box" style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px' }}>
+              <h3>Contract to Hire</h3>
+              <button
+                className="download-btn"
+                onClick={() => downloadFile(SAMPLE_FILES.contract, 'Contract_to_Hire.csv')}
+                disabled={isUploading}
+              >
+                Download
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="upload-section" style={{ flex: 1, maxWidth: '45%' }}>
+          <h2>📤 Upload File</h2>
+          <div className="upload-form">
+            <input
+              type="file"
+              accept=".csv,.pdf,.xlsx,.xls,.doc,.docx"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              className="file-input"
+              disabled={isUploading}
+            />
+            <button
+              className="upload-btn"
+              onClick={() => {
+                if (validateFile(file)) {
+                  uploadFile(file);
+                }
+              }}
+              disabled={isUploading}
+            >
+              {isUploading ? 'Uploading...' : 'Submit File'}
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
   );
 };
 
