@@ -6,9 +6,9 @@ import { fetchUserAttributes } from '@aws-amplify/auth';
 // Hardcoded bucket and folder names
 const BUCKET_NAME = 'production-bbil';
 const SAMPLE_FILES = {
-  darwinbox: 'Production_Sample_Files/Darwinbox_Tickets.csv',
-  attrition: 'Production_Sample_Files/Attrition_Tracker.csv',
-  contract: 'Production_Sample_Files/Contract_to_Hire.csv',
+  darwinbox: { key: 'Production_Sample_Files/Darwinbox_Tickets.csv', name: 'Darwinbox_Tickets.csv' },
+  attrition: { key: 'Production_Sample_Files/Attrition_Tracker.csv', name: 'Attrition_Tracker.csv' },
+  contract: { key: 'Production_Sample_Files/Contract_to_Hire.csv', name: 'Contract_to_Hire.csv' },
 };
 
 // Supported file extensions
@@ -22,6 +22,7 @@ const App: React.FC = () => {
   const [modalMessage, setModalMessage] = useState<string>("");
   const [modalType, setModalType] = useState<'success' | 'error'>('success');
   const [userAttributes, setUserAttributes] = useState<{ username?: string }>({ username: '' });
+  const [selectedFileType, setSelectedFileType] = useState<string>("");
 
   // Fetch user attributes on mount
   useEffect(() => {
@@ -167,6 +168,13 @@ const App: React.FC = () => {
     }
   };
 
+  // File type options for the download segment
+  const fileTypes = [
+    { label: 'Darwinbox Tickets', key: 'darwinbox' },
+    { label: 'Attrition Tracker', key: 'attrition' },
+    { label: 'Contract to Hire', key: 'contract' },
+  ];
+
   return (
     <main className="app-main">
       <header className="app-header">
@@ -213,39 +221,37 @@ const App: React.FC = () => {
 
       <div className="file-section" style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
         <div className="download-section" style={{ flex: 1, maxWidth: '45%' }}>
-          <h2>📥 Download Sample Files</h2>
-          <div className="download-form" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            <div className="download-box" style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px' }}>
-              <h3>Darwinbox Tickets</h3>
+          <h2>📥 Sample File Download</h2>
+          <div className="file-types-grid" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {fileTypes.map((type) => (
               <button
-                className="download-btn"
-                onClick={() => downloadFile(SAMPLE_FILES.darwinbox, 'Darwinbox_Tickets.csv')}
-                disabled={isUploading}
+                key={type.key}
+                onClick={() => setSelectedFileType(type.key === selectedFileType ? '' : type.key)}
+                className={`file-type-button ${selectedFileType === type.key ? 'active-file-type' : ''}`}
+                style={{
+                  padding: '10px',
+                  textAlign: 'left',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  backgroundColor: selectedFileType === type.key ? '#e0f7fa' : '#fff',
+                  cursor: 'pointer',
+                }}
               >
-                Download
+                {type.label}
               </button>
-            </div>
-            <div className="download-box" style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px' }}>
-              <h3>Attrition Tracker</h3>
-              <button
-                className="download-btn"
-                onClick={() => downloadFile(SAMPLE_FILES.attrition, 'Attrition_Tracker.csv')}
-                disabled={isUploading}
-              >
-                Download
-              </button>
-            </div>
-            <div className="download-box" style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px' }}>
-              <h3>Contract to Hire</h3>
-              <button
-                className="download-btn"
-                onClick={() => downloadFile(SAMPLE_FILES.contract, 'Contract_to_Hire.csv')}
-                disabled={isUploading}
-              >
-                Download
-              </button>
-            </div>
+            ))}
           </div>
+          {selectedFileType && (
+            <div className="download-button" style={{ marginTop: '15px' }}>
+              <button
+                className="download-btn"
+                onClick={() => downloadFile(SAMPLE_FILES[selectedFileType].key, SAMPLE_FILES[selectedFileType].name)}
+                disabled={isUploading}
+              >
+                Download {fileTypes.find((type) => type.key === selectedFileType)?.label} Sample CSV
+              </button>
+            </div>
+          )}
         </div>
         <div className="upload-section" style={{ flex: 1, maxWidth: '45%' }}>
           <h2>📤 Upload File</h2>
