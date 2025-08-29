@@ -225,19 +225,21 @@ const App: React.FC = () => {
       <div className="file-section" style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
         <div className="download-section" style={{ flex: 1, maxWidth: '45%' }}>
           <h2>📥 Sample File Download</h2>
-          <div className="file-types-grid" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="file-types-grid" style={{ display: 'flex', flexDirection: 'row', gap: '10px', flexWrap: 'wrap' }}>
             {fileTypes.map((type) => (
               <button
                 key={type.key}
                 onClick={() => setSelectedFileType(type.key === selectedFileType ? '' : type.key)}
                 className={`file-type-button ${selectedFileType === type.key ? 'active-file-type' : ''}`}
                 style={{
-                  padding: '10px',
-                  textAlign: 'left',
+                  padding: '10px 15px',
                   border: '1px solid #ccc',
                   borderRadius: '4px',
                   backgroundColor: selectedFileType === type.key ? '#e0f7fa' : '#fff',
                   cursor: 'pointer',
+                  flex: '1 1 auto',
+                  textAlign: 'center',
+                  minWidth: '120px',
                 }}
               >
                 {type.label}
