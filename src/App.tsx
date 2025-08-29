@@ -81,7 +81,7 @@ const App: React.FC = () => {
   };
 
   // Handle file upload
-  const uploadFile = async (file: File | null) => {
+  const uploadFile = async (file: File | null, uploadUrl: string) => {
     if (!file) {
       setModalMessage("Please select a file to upload.");
       setModalType('error');
@@ -97,7 +97,7 @@ const App: React.FC = () => {
 
     try {
       setIsUploading(true);
-      const uploadResponse = await fetch('https://djtdjzbdtj.execute-api.ap-south-1.amazonaws.com/P1/Production_Uploadlink', {
+      const uploadResponse = await fetch(uploadUrl, {
         method: "POST",
         body: formData,
       });
@@ -261,19 +261,26 @@ const App: React.FC = () => {
         <div className="upload-section" style={{ flex: 1, maxWidth: '45%' }}>
           <h2>📤 Upload File</h2>
           <div>
-          <h2>Darwinbox Tickets</h2>
-          <p style={{ padding: '10px', backgroundColor: '#e6e6e6', borderRadius: '8px', width: '50vw', height: '70px', float: 'left' }}>
-            &emsp;&emsp;&emsp;&emsp;
-            <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-            <button onClick={() => {
-              if (validateFile(file)) {
-                uploadFile(file, "https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev");
-              }
-            }}>
-              Submit File
-            </button>
-          </p>
-        </div>
+            <h2>Darwinbox Tickets</h2>
+            <p style={{ padding: '10px', backgroundColor: '#e6e6e6', borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                disabled={isUploading}
+              />
+              <button
+                onClick={() => {
+                  if (validateFile(file)) {
+                    uploadFile(file, 'https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev');
+                  }
+                }}
+                disabled={isUploading}
+              >
+                {isUploading ? 'Uploading...' : 'Submit File'}
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </main>
