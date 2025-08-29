@@ -260,26 +260,20 @@ const App: React.FC = () => {
         </div>
         <div className="upload-section" style={{ flex: 1, maxWidth: '45%' }}>
           <h2>📤 Upload File</h2>
-          <div className="upload-form">
-            <input
-              type="file"
-              accept=".csv,.pdf,.xlsx,.xls,.doc,.docx"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="file-input"
-              disabled={isUploading}
-            />
-            <button
-              className="upload-btn"
-              onClick={() => {
-                if (validateFile(file)) {
-                  uploadFile(file);
-                }
-              }}
-              disabled={isUploading}
-            >
-              {isUploading ? 'Uploading...' : 'Submit File'}
+          <div>
+          <h2>Anamay Stocks</h2>
+          <p style={{ padding: '10px', backgroundColor: '#e6e6e6', borderRadius: '8px', width: '50vw', height: '70px', float: 'left' }}>
+            &emsp;&emsp;&emsp;&emsp;
+            <input type="file" accept=".csv" onChange={(e) => setStocksFile(e.target.files?.[0] || null)} />
+            <button onClick={() => {
+              if (validateFile(stocksFile)) {
+                uploadFile(stocksFile, "https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev");
+              }
+            }}>
+              Submit Stocks File
             </button>
-          </div>
+          </p>
+        </div>
         </div>
       </div>
     </main>
