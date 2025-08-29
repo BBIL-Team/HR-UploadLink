@@ -19,7 +19,7 @@ const SUPPORTED_EXTENSIONS = ['.csv', '.pdf', '.xlsx', '.xls', '.doc', '.docx'];
 
 const App: React.FC = () => {
   const { signOut } = useAuthenticator();
-  const [files, setFiles] = useState<{ [key in SampleFileType]?: File | null }>({
+  const [files, setFiles] = useState<{ [key in SampleFileType]: File | null }>({
     darwinbox: null,
     attrition: null,
     contract: null,
@@ -280,8 +280,9 @@ const App: React.FC = () => {
                   <button
                     className="upload-btn"
                     onClick={() => {
-                      if (validateFile(files[type.key], type.key)) {
-                        uploadFile(files[type.key], type.key);
+                      const file = files[type.key];
+                      if (validateFile(file, type.key)) {
+                        uploadFile(file, type.key);
                       }
                     }}
                     disabled={isUploading}
