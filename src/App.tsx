@@ -17,13 +17,6 @@ type SampleFileType = keyof typeof SAMPLE_FILES;
 // Supported file extensions
 const SUPPORTED_EXTENSIONS = ['.csv', '.pdf', '.xlsx', '.xls', '.doc', '.docx'];
 
-// Upload URLs for each file type
-const UPLOAD_URLS: { [key in SampleFileType]: string } = {
-  darwinbox: 'https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev',
-  attrition: 'https://djtdjzbdtj.execute-api.ap-south-1.amazonaws.com/P1/Production_Uploadlink',
-  contract: 'https://djtdjzbdtj.execute-api.ap-south-1.amazonaws.com/P1/Production_Uploadlink',
-};
-
 const App: React.FC = () => {
   const { signOut } = useAuthenticator();
   const [files, setFiles] = useState<{ [key in SampleFileType]: File | null }>({
@@ -32,11 +25,12 @@ const App: React.FC = () => {
     contract: null,
   });
   const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [File, setFile] = React.useState<File | null>(null);
   const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
   const [modalMessage, setModalMessage] = useState<string>("");
   const [modalType, setModalType] = useState<'success' | 'error'>('success');
   const [userAttributes, setUserAttributes] = useState<{ username?: string }>({ username: '' });
-  const [selectedFileType, setSelectedFileType] = useState<SampleFileType | "">("");
+  
 
   // Fetch user attributes on mount
   useEffect(() => {
@@ -237,33 +231,20 @@ const App: React.FC = () => {
       <div className="file-section" style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
         <div className="upload-section" style={{ flex: 1, maxWidth: '45%' }}>
           <h2>📤 Upload Files</h2>
-          <div className="upload-form" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            {fileTypes.map((type) => (
-              <div key={type.key} className="upload-form-item">
-                <h3>{type.label}</h3>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <input
-                    type="file"
-                    accept=".csv,.pdf,.xlsx,.xls,.doc,.docx"
-                    onChange={(e) => setFiles((prev) => ({ ...prev, [type.key]: e.target.files?.[0] || null }))}
-                    className="file-input"
-                    disabled={isUploading}
-                  />
-                  <button
-                    className="upload-btn"
-                    onClick={() => {
-                      const file = files[type.key];
-                      if (validateFile(file, type.key)) {
-                        uploadFile(file, type.key, UPLOAD_URLS[type.key]);
-                      }
-                    }}
-                    disabled={isUploading}
-                  >
-                    {isUploading ? 'Uploading...' : `Submit ${type.label} File`}
-                  </button>
-                </div>
-              </div>
-            ))}
+         <div>
+          <h2>&emsp;&emsp;Anamay Stocks</h2>
+          <p style={{ padding: '10px', backgroundColor: '#e6e6e6', borderRadius: '8px', width: '50vw', height: '70px', float: 'left' }}>
+            &emsp;&emsp;&emsp;&emsp;
+            <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+            <button onClick={() => {
+              if (validateFile(File)) {
+                uploadFile(File, "https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev");
+              }
+            }}>
+              Submit Stocks File
+            </button>
+          </p>
+        </div>
           </div>
         </div>
         <div className="download-section" style={{ flex: 1, maxWidth: '45%' }}>
