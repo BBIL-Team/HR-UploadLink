@@ -19,11 +19,7 @@ const SUPPORTED_EXTENSIONS = ['.csv', '.pdf', '.xlsx', '.xls', '.doc', '.docx'];
 
 const App: React.FC = () => {
   const { signOut } = useAuthenticator();
-  const [files, setFiles] = useState<{ [key in SampleFileType]: File | null }>({
-    darwinbox: null,
-    attrition: null,
-    contract: null,
-  });
+  const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
   const [modalMessage, setModalMessage] = useState<string>("");
@@ -71,23 +67,23 @@ const App: React.FC = () => {
   }, [showMessageModal, isUploading]);
 
   // Validate file extension
-  const validateFile = (file: File | null, fileType: SampleFileType): boolean => {
+  const validateFile = (file: File | null): boolean => {
     if (file) {
       const extension = (file.name.split('.').pop() || '').toLowerCase();
       if (SUPPORTED_EXTENSIONS.includes(`.${extension}`)) {
         return true;
       }
     }
-    setModalMessage(`Please upload a valid file for ${fileType} (.csv, .pdf, .xlsx, .xls, .doc, .docx).`);
+    setModalMessage("Please upload a valid file (.csv, .pdf, .xlsx, .xls, .doc, .docx).");
     setModalType('error');
     setShowMessageModal(true);
     return false;
   };
 
   // Handle file upload
-  const uploadFile = async (file: File | null, fileType: SampleFileType) => {
+  const uploadFile = async (file: File | null) => {
     if (!file) {
-      setModalMessage(`Please select a file to upload for ${fileType}.`);
+      setModalMessage("Please select a file to upload.");
       setModalType('error');
       setShowMessageModal(true);
       return;
@@ -98,7 +94,6 @@ const App: React.FC = () => {
     formData.append('file', file);
     formData.append('fileName', originalFileName);
     formData.append('username', userAttributes.username || 'Unknown');
-    formData.append('fileType', fileType); // Add fileType to formData for backend processing
 
     try {
       setIsUploading(true);
@@ -109,19 +104,19 @@ const App: React.FC = () => {
 
       if (uploadResponse.ok) {
         const uploadData = await uploadResponse.json();
-        setModalMessage(uploadData.message || `File uploaded successfully for ${fileType}!`);
+        setModalMessage(uploadData.message || "File uploaded successfully!");
         setModalType('success');
         setShowMessageModal(true);
-        setFiles((prev) => ({ ...prev, [fileType]: null }));
+        setFile(null);
       } else {
         const errorData = await uploadResponse.json();
-        setModalMessage(errorData.message || errorData.error || `Failed to upload file for ${fileType}: ${uploadResponse.statusText}`);
+        setModalMessage(errorData.message || errorData.error || `Failed to upload file: ${uploadResponse.statusText}`);
         setModalType('error');
         setShowMessageModal(true);
       }
     } catch (error: any) {
       console.error("Error:", error);
-      setModalMessage(`An error occurred while uploading the file for ${fileType}: ${error.message || 'Unknown error'}`);
+      setModalMessage(`An error occurred while uploading the file: ${error.message || 'Unknown error'}`);
       setModalType('error');
       setShowMessageModal(true);
     } finally {
@@ -176,7 +171,7 @@ const App: React.FC = () => {
     }
   };
 
-  // File type options for the download and upload segments
+  // File type options for the download segment
   const fileTypes: { label: string; key: SampleFileType }[] = [
     { label: 'Darwinbox Tickets', key: 'darwinbox' },
     { label: 'Attrition Tracker', key: 'attrition' },
@@ -264,34 +259,26 @@ const App: React.FC = () => {
           )}
         </div>
         <div className="upload-section" style={{ flex: 1, maxWidth: '45%' }}>
-          <h2>📤 Upload Files</h2>
-          <div className="upload-form" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            {fileTypes.map((type) => (
-              <div key={type.key} style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px' }}>
-                <h3>{type.label}</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <input
-                    type="file"
-                    accept=".csv,.pdf,.xlsx,.xls,.doc,.docx"
-                    onChange={(e) => setFiles((prev) => ({ ...prev, [type.key]: e.target.files?.[0] || null }))}
-                    className="file-input"
-                    disabled={isUploading}
-                  />
-                  <button
-                    className="upload-btn"
-                    onClick={() => {
-                      const file = files[type.key];
-                      if (validateFile(file, type.key)) {
-                        uploadFile(file, type.key);
-                      }
-                    }}
-                    disabled={isUploading}
-                  >
-                    {isUploading ? 'Uploading...' : `Submit ${type.label} File`}
-                  </button>
-                </div>
-              </div>
-            ))}
+          <h2>📤 Upload File</h2>
+          <div className="upload-form">
+            <input
+              type="file"
+              accept=".csv,.pdf,.xlsx,.xls,.doc,.docx"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              className="file-input"
+              disabled={isUploading}
+            />
+            <button
+              className="upload-btn"
+              onClick={() => {
+                if (validateFile(file)) {
+                  uploadFile(file);
+                }
+              }}
+              disabled={isUploading}
+            >
+              {isUploading ? 'Uploading...' : 'Submit File'}
+            </button>
           </div>
         </div>
       </div>
