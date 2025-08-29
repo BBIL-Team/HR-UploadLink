@@ -264,7 +264,7 @@ const App: React.FC = () => {
           <h2>Darwinbox Tickets</h2>
           <p style={{ padding: '10px', backgroundColor: '#e6e6e6', borderRadius: '8px', width: '50vw', height: '70px', float: 'left' }}>
             &emsp;&emsp;&emsp;&emsp;
-            <input type="file" accept=".csv" onChange={(e) => setfile(e.target.files?.[0] || null)} />
+            <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files?.[0] || null)} />
             <button onClick={() => {
               if (validateFile(file)) {
                 uploadFile(file, "https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev");
