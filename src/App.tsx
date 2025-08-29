@@ -17,9 +17,20 @@ type SampleFileType = keyof typeof SAMPLE_FILES;
 // Supported file extensions
 const SUPPORTED_EXTENSIONS = ['.csv', '.pdf', '.xlsx', '.xls', '.doc', '.docx'];
 
+// Upload URLs for each file type
+const UPLOAD_URLS: { [key in SampleFileType]: string } = {
+  darwinbox: 'https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev',
+  attrition: 'https://djtdjzbdtj.execute-api.ap-south-1.amazonaws.com/P1/Production_Uploadlink',
+  contract: 'https://djtdjzbdtj.execute-api.ap-south-1.amazonaws.com/P1/Production_Uploadlink',
+};
+
 const App: React.FC = () => {
   const { signOut } = useAuthenticator();
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<{ [key in SampleFileType]: File | null }>({
+    darwinbox: null,
+    attrition: null,
+    contract: null,
+  });
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
   const [modalMessage, setModalMessage] = useState<string>("");
@@ -67,23 +78,23 @@ const App: React.FC = () => {
   }, [showMessageModal, isUploading]);
 
   // Validate file extension
-  const validateFile = (file: File | null): boolean => {
+  const validateFile = (file: File | null, fileType: SampleFileType): boolean => {
     if (file) {
       const extension = (file.name.split('.').pop() || '').toLowerCase();
       if (SUPPORTED_EXTENSIONS.includes(`.${extension}`)) {
         return true;
       }
     }
-    setModalMessage("Please upload a valid file (.csv, .pdf, .xlsx, .xls, .doc, .docx).");
+    setModalMessage(`Please upload a valid file for ${fileType} (.csv, .pdf, .xlsx, .xls, .doc, .docx).`);
     setModalType('error');
     setShowMessageModal(true);
     return false;
   };
 
   // Handle file upload
-  const uploadFile = async (file: File | null, uploadUrl: string) => {
+  const uploadFile = async (file: File | null, fileType: SampleFileType, uploadUrl: string) => {
     if (!file) {
-      setModalMessage("Please select a file to upload.");
+      setModalMessage(`Please select a file to upload for ${fileType}.`);
       setModalType('error');
       setShowMessageModal(true);
       return;
@@ -94,29 +105,30 @@ const App: React.FC = () => {
     formData.append('file', file);
     formData.append('fileName', originalFileName);
     formData.append('username', userAttributes.username || 'Unknown');
+    formData.append('fileType', fileType);
 
     try {
       setIsUploading(true);
       const uploadResponse = await fetch(uploadUrl, {
-        method: "POST",
+        method: 'POST',
         body: formData,
       });
 
       if (uploadResponse.ok) {
         const uploadData = await uploadResponse.json();
-        setModalMessage(uploadData.message || "File uploaded successfully!");
+        setModalMessage(uploadData.message || `File uploaded successfully for ${fileType}!`);
         setModalType('success');
         setShowMessageModal(true);
-        setFile(null);
+        setFiles((prev) => ({ ...prev, [fileType]: null }));
       } else {
         const errorData = await uploadResponse.json();
-        setModalMessage(errorData.message || errorData.error || `Failed to upload file: ${uploadResponse.statusText}`);
+        setModalMessage(errorData.message || errorData.error || `Failed to upload file for ${fileType}: ${uploadResponse.statusText}`);
         setModalType('error');
         setShowMessageModal(true);
       }
     } catch (error: any) {
-      console.error("Error:", error);
-      setModalMessage(`An error occurred while uploading the file: ${error.message || 'Unknown error'}`);
+      console.error('Error:', error);
+      setModalMessage(`An error occurred while uploading the file for ${fileType}: ${error.message || 'Unknown error'}`);
       setModalType('error');
       setShowMessageModal(true);
     } finally {
@@ -171,7 +183,7 @@ const App: React.FC = () => {
     }
   };
 
-  // File type options for the download segment
+  // File type options for the download and upload segments
   const fileTypes: { label: string; key: SampleFileType }[] = [
     { label: 'Darwinbox Tickets', key: 'darwinbox' },
     { label: 'Attrition Tracker', key: 'attrition' },
@@ -223,6 +235,37 @@ const App: React.FC = () => {
       <h1 className="app-title"><u>BBIL File Interface</u></h1>
 
       <div className="file-section" style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
+        <div className="upload-section" style={{ flex: 1, maxWidth: '45%' }}>
+          <h2>📤 Upload Files</h2>
+          <div className="upload-form" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            {fileTypes.map((type) => (
+              <div key={type.key} className="upload-form-item">
+                <h3>{type.label}</h3>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <input
+                    type="file"
+                    accept=".csv,.pdf,.xlsx,.xls,.doc,.docx"
+                    onChange={(e) => setFiles((prev) => ({ ...prev, [type.key]: e.target.files?.[0] || null }))}
+                    className="file-input"
+                    disabled={isUploading}
+                  />
+                  <button
+                    className="upload-btn"
+                    onClick={() => {
+                      const file = files[type.key];
+                      if (validateFile(file, type.key)) {
+                        uploadFile(file, type.key, UPLOAD_URLS[type.key]);
+                      }
+                    }}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? 'Uploading...' : `Submit ${type.label} File`}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
         <div className="download-section" style={{ flex: 1, maxWidth: '45%' }}>
           <h2>📥 Sample File Download</h2>
           <div className="file-types-grid" style={{ display: 'flex', flexDirection: 'row', gap: '10px', flexWrap: 'wrap' }}>
@@ -257,49 +300,6 @@ const App: React.FC = () => {
               </button>
             </div>
           )}
-        </div>
-        <div className="upload-section" style={{ flex: 1, maxWidth: '45%' }}>
-          <h2>📤 Upload File</h2>
-          <div>
-            <h2>Darwinbox Tickets</h2>
-            <p style={{ padding: '10px', backgroundColor: '#e6e6e6', borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-                disabled={isUploading}
-              />
-              <button
-                onClick={() => {
-                  if (validateFile(file)) {
-                    uploadFile(file, 'https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev');
-                  }
-                }}
-                disabled={isUploading}
-              >
-                {isUploading ? 'Uploading...' : 'Submit File'}
-              </button>
-            </p>
-             <h2>Darwinbox Tickets</h2>
-            <p style={{ padding: '10px', backgroundColor: '#e6e6e6', borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-                disabled={isUploading}
-              />
-              <button
-                onClick={() => {
-                  if (validateFile(file)) {
-                    uploadFile(file, 'https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev');
-                  }
-                }}
-                disabled={isUploading}
-              >
-                {isUploading ? 'Uploading...' : 'Submit File'}
-              </button>
-            </p>
-          </div>
         </div>
       </div>
     </main>
