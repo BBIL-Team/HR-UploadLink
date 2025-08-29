@@ -223,9 +223,9 @@ const App: React.FC = () => {
       <h1 className="app-title"><u>BBIL File Interface</u></h1>
 
       <div className="file-section" style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
-        <div className="download-section" style={{ flex: 1, maxWidth: '45%',backgroundcolor:'#f0f0f0'}}>
+        <div className="download-section" style={{ flex: 1, maxWidth: '45%',backgroundColor:'#f0f0f0'}}>
           <h2>📥 Sample File Download</h2>
-          <div className="file-types-grid" style={{ display: 'flex', flexDirection: 'row', gap: '10px', flexWrap: 'wrap',backgroundcolor:'#e6e6e6' }}>
+          <div className="file-types-grid" style={{ display: 'flex', flexDirection: 'row', gap: '10px', flexWrap: 'wrap',backgroundColor:'#e6e6e6' }}>
             {fileTypes.map((type) => (
               <button
                 key={type.key}
