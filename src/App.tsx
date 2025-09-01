@@ -19,11 +19,7 @@ const SUPPORTED_EXTENSIONS = ['.csv', '.pdf', '.xlsx', '.xls', '.doc', '.docx'];
 
 const App: React.FC = () => {
   const { signOut } = useAuthenticator();
-  const [files, setFiles] = useState<{ [key in SampleFileType]: File | null }>({
-    darwinbox: null,
-    attrition: null,
-    contract: null,
-  });
+  const [File, setFile] = React.useState<File | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [File, setFile] = React.useState<File | null>(null);
   const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
