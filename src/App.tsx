@@ -114,13 +114,13 @@ const App: React.FC = () => {
   };
 
   return (
-    <mainstyle={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '90vw', backgroundColor: '#f8f8ff' }}">
+    <main style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '90vw', backgroundColor: '#f8f8ff' }}>
       <header style={{ width: '100%' }}>
         <div style={{ width: '130px', height: '90px', overflow: 'hidden', borderRadius: '8px' }}>
           <img
             style={{ padding: '10px', width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 50%' }}
             src="https://www.bharatbiotech.com/images/bharat-biotech-logo.jpg"
-            alt="Company Logo"\
+            alt="Company Logo"
             className="logo"
           />
         </div>
@@ -130,7 +130,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-   <h1 style={{ padding: '10px', textAlign: 'center', width: '100vw' }}>
+      <h1 style={{ padding: '10px', textAlign: 'center', width: '100vw' }}>
         <u>BBIL HR - Dashboard Update Interface</u>
       </h1>
 
@@ -160,8 +160,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <h1 className="app-title"><u>BBIL File Interface</u></h1>
-
       <div className="file-section" style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
         <div className="upload-section" style={{ flex: 1, maxWidth: '45%' }}>
           <h2>📤 Upload Files</h2>
@@ -184,4 +182,5 @@ const App: React.FC = () => {
     </main>
   );
 };
+
 export default App;
