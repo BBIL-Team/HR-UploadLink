@@ -3,7 +3,7 @@ import './App.css';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { fetchUserAttributes } from '@aws-amplify/auth';
 
-// Hardcoded bucket and folder names
+// Hardcoded bucket name
 const BUCKET_NAME = 'production-bbil';
 
 // Supported file extensions
@@ -11,13 +11,12 @@ const SUPPORTED_EXTENSIONS = ['.csv', '.pdf', '.xlsx', '.xls', '.doc', '.docx'];
 
 const App: React.FC = () => {
   const { signOut } = useAuthenticator();
-  const [File, setFile] = React.useState<File | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
   const [modalMessage, setModalMessage] = useState<string>("");
   const [modalType, setModalType] = useState<'success' | 'error'>('success');
   const [userAttributes, setUserAttributes] = useState<{ username?: string }>({ username: '' });
-  
 
   // Fetch user attributes on mount
   useEffect(() => {
@@ -59,23 +58,23 @@ const App: React.FC = () => {
   }, [showMessageModal, isUploading]);
 
   // Validate file extension
-  const validateFile = (file: File | null, fileType: SampleFileType): boolean => {
+  const validateFile = (file: File | null): boolean => {
     if (file) {
       const extension = (file.name.split('.').pop() || '').toLowerCase();
       if (SUPPORTED_EXTENSIONS.includes(`.${extension}`)) {
         return true;
       }
     }
-    setModalMessage(`Please upload a valid file for ${fileType} (.csv, .pdf, .xlsx, .xls, .doc, .docx).`);
+    setModalMessage(`Please upload a valid file (.csv, .pdf, .xlsx, .xls, .doc, .docx).`);
     setModalType('error');
     setShowMessageModal(true);
     return false;
   };
 
   // Handle file upload
-  const uploadFile = async (file: File | null, fileType: SampleFileType, uploadUrl: string) => {
+  const uploadFile = async (file: File | null, uploadUrl: string) => {
     if (!file) {
-      setModalMessage(`Please select a file to upload for ${fileType}.`);
+      setModalMessage(`Please select a file to upload.`);
       setModalType('error');
       setShowMessageModal(true);
       return;
@@ -86,7 +85,7 @@ const App: React.FC = () => {
     formData.append('file', file);
     formData.append('fileName', originalFileName);
     formData.append('username', userAttributes.username || 'Unknown');
-    formData.append('fileType', fileType);
+    formData.append('fileType', 'stocks');
 
     try {
       setIsUploading(true);
@@ -97,19 +96,19 @@ const App: React.FC = () => {
 
       if (uploadResponse.ok) {
         const uploadData = await uploadResponse.json();
-        setModalMessage(uploadData.message || `File uploaded successfully for ${fileType}!`);
+        setModalMessage(uploadData.message || `File uploaded successfully!`);
         setModalType('success');
         setShowMessageModal(true);
-        setFiles((prev) => ({ ...prev, [fileType]: null }));
+        setFile(null);
       } else {
         const errorData = await uploadResponse.json();
-        setModalMessage(errorData.message || errorData.error || `Failed to upload file for ${fileType}: ${uploadResponse.statusText}`);
+        setModalMessage(errorData.message || errorData.error || `Failed to upload file: ${uploadResponse.statusText}`);
         setModalType('error');
         setShowMessageModal(true);
       }
     } catch (error: any) {
       console.error('Error:', error);
-      setModalMessage(`An error occurred while uploading the file for ${fileType}: ${error.message || 'Unknown error'}`);
+      setModalMessage(`An error occurred while uploading the file: ${error.message || 'Unknown error'}`);
       setModalType('error');
       setShowMessageModal(true);
     } finally {
@@ -159,30 +158,29 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <h1 className="app-title">BBIL HR Upload Interface</h1>
+      <h1 className="app-title"><u>BBIL File Interface</u></h1>
 
-      <div className="file-section" style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
+      <div className="file-section" style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
         <div className="upload-section" style={{ flex: 1, maxWidth: '45%' }}>
           <h2>📤 Upload Files</h2>
-         <div>
-          <h2>&emsp;&emsp;Anamay Stocks</h2>
-          <p style={{ padding: '10px', backgroundColor: '#e6e6e6', borderRadius: '8px', width: '50vw', height: '70px', float: 'left' }}>
-            &emsp;&emsp;&emsp;&emsp;
-            <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-            <button onClick={() => {
-              if (validateFile(File)) {
-                uploadFile(File, "https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev");
-              }
-            }}>
-              Submit Stocks File
-            </button>
-          </p>
-        </div>
+          <div>
+            <h2>&emsp;&emsp;Anamay Stocks</h2>
+            <p style={{ padding: '10px', backgroundColor: '#e6e6e6', borderRadius: '8px', width: '50vw', height: '70px', float: 'left' }}>
+              &emsp;&emsp;&emsp;&emsp;
+              <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+              <button onClick={() => {
+                if (validateFile(file)) {
+                  uploadFile(file, "https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev");
+                }
+              }}>
+                Submit Stocks File
+              </button>
+            </p>
           </div>
         </div>
-        </div>
-    </main> 
+      </div>
+    </main>
   );
 };
-
 export default App;
+export default 
