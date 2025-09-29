@@ -17,3 +17,7 @@ header {
 .day.red {
   background-color: lightcoral;
 }
+
+.username, .phone-number {
+  white-space: nowrap;
+}
