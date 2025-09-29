@@ -114,11 +114,11 @@ const App: React.FC = () => {
   };
 
   return (
-    <main style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '90vw', backgroundColor: '#f8f8ff' }}>
+    <main style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '90vw', backgroundColor: 'teal' }}>
       <header style={{ width: '100%' }}>
         <div style={{ width: '130px', height: '90px', overflow: 'hidden', borderRadius: '8px' }}>
           <img
-            style={{ padding: '10px', width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 50%' }}
+            style={{ padding: '10px', width: '100%', height: '100%', objectFit: 'contain' }}
             src="https://www.bharatbiotech.com/images/bharat-biotech-logo.jpg"
             alt="Company Logo"
             className="logo"
@@ -161,7 +161,7 @@ const App: React.FC = () => {
       )}
 
       <div className="file-section" style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
-        <div className="upload-section" style={{ flex: 1, maxWidth: '45%' }}>
+        <div className="upload-section" style={{ maxWidth: '45%' }}>
           <h2>📤 Upload Files</h2>
           <div>
             <h2>&emsp;&emsp;Anamay Stocks</h2>
