@@ -114,13 +114,14 @@ const App: React.FC = () => {
   };
 
   return (
-    <main className="app-main">
-      <header className="app-header">
-        <div style={{ width: '130px', height: '120px', overflow: 'hidden', borderRadius: '8px', marginLeft: '20px' }}>
+    <mainstyle={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '90vw', backgroundColor: '#f8f8ff' }}">
+      <header style={{ width: '100%' }}>
+        <div style={{ width: '130px', height: '90px', overflow: 'hidden', borderRadius: '8px' }}>
           <img
-            style={{ width: '100%', height: '100%', objectFit: 'contain', boxSizing: 'border-box' }}
+            style={{ padding: '10px', width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 50%' }}
             src="https://www.bharatbiotech.com/images/bharat-biotech-logo.jpg"
-            alt="Company Logo"
+            alt="Company Logo"\
+            className="logo"
           />
         </div>
         <div className="header-user-info">
@@ -128,6 +129,10 @@ const App: React.FC = () => {
           <button className="sign-out-btn" onClick={signOut}>Sign out</button>
         </div>
       </header>
+
+   <h1 style={{ padding: '10px', textAlign: 'center', width: '100vw' }}>
+        <u>BBIL HR - Dashboard Update Interface</u>
+      </h1>
 
       {showMessageModal && (
         <div className="modal-overlay">
