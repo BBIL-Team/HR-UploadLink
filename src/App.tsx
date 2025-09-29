@@ -8,9 +8,24 @@ const SUPPORTED_EXTENSIONS = ['.csv', '.pdf', '.xlsx', '.xls', '.doc', '.docx'];
 
 // File type configuration
 const FILE_TYPES = {
-  darwinbox: { label: 'Darwinbox Tickets', url: 'https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Darwinbox_Tickets_UploadLink_Dev' },
-  attrition: { label: 'Attrition Tracker', url: 'https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Attrition_Tracker_UploadLink_Dev' },
-  contract: { label: 'Contract to Hire', url: 'https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Contract_to_Hire_UploadLink_Dev' },
+  darwinbox: { 
+    label: 'Darwinbox Tickets', 
+    uploadUrl: 'https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Darwinbox_Tickets_UploadLink_Dev',
+    downloadKey: 'Production_Sample_Files/Darwinbox_Tickets.csv',
+    downloadName: 'Darwinbox_Tickets.csv'
+  },
+  attrition: { 
+    label: 'Attrition Tracker', 
+    uploadUrl: 'https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Attrition_Tracker_UploadLink_Dev',
+    downloadKey: 'Production_Sample_Files/Attrition_Tracker.csv',
+    downloadName: 'Attrition_Tracker.csv'
+  },
+  contract: { 
+    label: 'Contract to Hire', 
+    uploadUrl: 'https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Contract_to_Hire_UploadLink_Dev',
+    downloadKey: 'Production_Sample_Files/Contract_to_Hire.csv',
+    downloadName: 'Contract_to_Hire.csv'
+  },
 } as const;
 
 type FileType = keyof typeof FILE_TYPES;
@@ -27,6 +42,7 @@ const App: React.FC = () => {
   const [modalMessage, setModalMessage] = useState<string>("");
   const [modalType, setModalType] = useState<'success' | 'error'>('success');
   const [userAttributes, setUserAttributes] = useState<{ username?: string }>({ username: '' });
+  const [selectedFileType, setSelectedFileType] = useState<FileType | ''>('');
 
   // Fetch user attributes on mount
   useEffect(() => {
@@ -126,6 +142,53 @@ const App: React.FC = () => {
     }
   };
 
+  // Handle file download
+  const downloadFile = async (fileKey: string, fileName: string) => {
+    try {
+      const response = await fetch('https://e3blv3dko6.execute-api.ap-south-1.amazonaws.com/P1/presigned_urls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bucket_name: 'production-bbil',
+          file_key: fileKey,
+          action: 'download',
+          isSample: true
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.presigned_url) {
+          const link = document.createElement('a');
+          link.href = data.presigned_url;
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setModalMessage(`Downloaded ${fileName} successfully!`);
+          setModalType('success');
+          setShowMessageModal(true);
+        } else {
+          setModalMessage('Failed to fetch download link.');
+          setModalType('error');
+          setShowMessageModal(true);
+        }
+      } else {
+        const errorData = await response.json();
+        setModalMessage(`Error: ${errorData.error || 'Failed to fetch download link'} (Status: ${response.status})`);
+        setModalType('error');
+        setShowMessageModal(true);
+      }
+    } catch (error: any) {
+      console.error('Download error:', error);
+      setModalMessage(`An error occurred while fetching the download link: ${error.message}`);
+      setModalType('error');
+      setShowMessageModal(true);
+    }
+  };
+
   return (
     <main style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '90vw', backgroundColor: '#f8f8ff' }}>
       <header style={{ width: '100%' }}>
@@ -173,8 +236,8 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <div className="file-section" style={{ justifyContent: 'center', gap: '20px' }}>
-        <div className="upload-section" style={{ maxWidth: '45%' }}>
+      <div className="file-section" style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
+        <div className="upload-section" style={{ flex: 1, maxWidth: '45%' }}>
           {Object.keys(FILE_TYPES).map((key) => (
             <div key={key}>
               <h2>{FILE_TYPES[key as FileType].label}</h2>
@@ -188,7 +251,7 @@ const App: React.FC = () => {
                 <button
                   onClick={() => {
                     if (validateFile(files[key as FileType], key as FileType)) {
-                      uploadFile(files[key as FileType], key as FileType, FILE_TYPES[key as FileType].url);
+                      uploadFile(files[key as FileType], key as FileType, FILE_TYPES[key as FileType].uploadUrl);
                     }
                   }}
                 >
@@ -197,6 +260,41 @@ const App: React.FC = () => {
               </p>
             </div>
           ))}
+        </div>
+        <div className="download-section" style={{ flex: 1, maxWidth: '45%' }}>
+          <h2>📥 Sample File Download</h2>
+          <div className="file-types-grid" style={{ display: 'flex', flexDirection: 'row', gap: '10px', flexWrap: 'wrap' }}>
+            {Object.keys(FILE_TYPES).map((key) => (
+              <button
+                key={key}
+                onClick={() => setSelectedFileType(key as FileType === selectedFileType ? '' : (key as FileType))}
+                className={`file-type-button ${selectedFileType === key ? 'active-file-type' : ''}`}
+                style={{
+                  padding: '10px 15px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  backgroundColor: selectedFileType === key ? '#e0f7fa' : '#fff',
+                  cursor: 'pointer',
+                  flex: '1 1 auto',
+                  textAlign: 'center',
+                  minWidth: '120px',
+                }}
+              >
+                {FILE_TYPES[key as FileType].label}
+              </button>
+            ))}
+          </div>
+          {selectedFileType && (
+            <div className="download-button" style={{ marginTop: '15px' }}>
+              <button
+                className="download-btn"
+                onClick={() => downloadFile(FILE_TYPES[selectedFileType].downloadKey, FILE_TYPES[selectedFileType].downloadName)}
+                disabled={isUploading}
+              >
+                Download {FILE_TYPES[selectedFileType].label} Sample CSV
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </main>
