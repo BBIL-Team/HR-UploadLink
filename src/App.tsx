@@ -160,11 +160,11 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <div className="file-section" style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+      <div className="file-section" style={{justifyContent: 'center', gap: '20px' }}>
         <div className="upload-section" style={{ maxWidth: '45%' }}>
           <h2>📤 Upload Files</h2>
           <div>
-            <h2>&emsp;&emsp;Anamay Stocks</h2>
+            <h2>Darwinbox Tickets</h2>
             <p style={{ padding: '10px', backgroundColor: '#e6e6e6', borderRadius: '8px', width: '50vw', height: '70px', float: 'left' }}>
               &emsp;&emsp;&emsp;&emsp;
               <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files?.[0] || null)} />
@@ -173,7 +173,7 @@ const App: React.FC = () => {
                   uploadFile(file, "https://ty1d56bgkb.execute-api.ap-south-1.amazonaws.com/S1/Anamay_Stocks_UploadLink_Dev");
                 }
               }}>
-                Submit Stocks File
+                Submit File
               </button>
             </p>
           </div>
