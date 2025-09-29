@@ -3,9 +3,6 @@ import './App.css';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { fetchUserAttributes } from '@aws-amplify/auth';
 
-// Hardcoded bucket name
-const BUCKET_NAME = 'production-bbil';
-
 // Supported file extensions
 const SUPPORTED_EXTENSIONS = ['.csv', '.pdf', '.xlsx', '.xls', '.doc', '.docx'];
 
