@@ -5,14 +5,6 @@ import { fetchUserAttributes } from '@aws-amplify/auth';
 
 // Hardcoded bucket and folder names
 const BUCKET_NAME = 'production-bbil';
-const SAMPLE_FILES = {
-  darwinbox: { key: 'Production_Sample_Files/Darwinbox_Tickets.csv', name: 'Darwinbox_Tickets.csv' },
-  attrition: { key: 'Production_Sample_Files/Attrition_Tracker.csv', name: 'Attrition_Tracker.csv' },
-  contract: { key: 'Production_Sample_Files/Contract_to_Hire.csv', name: 'Contract_to_Hire.csv' },
-} as const;
-
-// Define the type for the keys of SAMPLE_FILES
-type SampleFileType = keyof typeof SAMPLE_FILES;
 
 // Supported file extensions
 const SUPPORTED_EXTENSIONS = ['.csv', '.pdf', '.xlsx', '.xls', '.doc', '.docx'];
@@ -21,7 +13,6 @@ const App: React.FC = () => {
   const { signOut } = useAuthenticator();
   const [File, setFile] = React.useState<File | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [File, setFile] = React.useState<File | null>(null);
   const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
   const [modalMessage, setModalMessage] = useState<string>("");
   const [modalType, setModalType] = useState<'success' | 'error'>('success');
@@ -126,60 +117,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Handle file download
-  const downloadFile = async (fileKey: string, fileName: string) => {
-    try {
-      const response = await fetch('https://e3blv3dko6.execute-api.ap-south-1.amazonaws.com/P1/presigned_urls', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          bucket_name: BUCKET_NAME,
-          file_key: fileKey,
-          action: 'download',
-          isSample: true
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.presigned_url) {
-          const link = document.createElement('a');
-          link.href = data.presigned_url;
-          link.download = fileName;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          setModalMessage(`Downloaded ${fileName} successfully!`);
-          setModalType('success');
-          setShowMessageModal(true);
-        } else {
-          setModalMessage('Failed to fetch download link.');
-          setModalType('error');
-          setShowMessageModal(true);
-        }
-      } else {
-        const errorData = await response.json();
-        setModalMessage(`Error: ${errorData.error || 'Failed to fetch download link'} (Status: ${response.status})`);
-        setModalType('error');
-        setShowMessageModal(true);
-      }
-    } catch (error: any) {
-      console.error('Download error:', error);
-      setModalMessage(`An error occurred while fetching the download link: ${error.message}`);
-      setModalType('error');
-      setShowMessageModal(true);
-    }
-  };
-
-  // File type options for the download and upload segments
-  const fileTypes: { label: string; key: SampleFileType }[] = [
-    { label: 'Darwinbox Tickets', key: 'darwinbox' },
-    { label: 'Attrition Tracker', key: 'attrition' },
-    { label: 'Contract to Hire', key: 'contract' },
-  ];
-
   return (
     <main className="app-main">
       <header className="app-header">
@@ -222,7 +159,7 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <h1 className="app-title"><u>BBIL File Interface</u></h1>
+      <h1 className="app-title">BBIL HR Upload Interface</h1>
 
       <div className="file-section" style={{ display: 'flex', justifyContent: 'space-between', gap: '20px' }}>
         <div className="upload-section" style={{ flex: 1, maxWidth: '45%' }}>
@@ -243,43 +180,8 @@ const App: React.FC = () => {
         </div>
           </div>
         </div>
-        <div className="download-section" style={{ flex: 1, maxWidth: '45%' }}>
-          <h2>📥 Sample File Download</h2>
-          <div className="file-types-grid" style={{ display: 'flex', flexDirection: 'row', gap: '10px', flexWrap: 'wrap' }}>
-            {fileTypes.map((type) => (
-              <button
-                key={type.key}
-                onClick={() => setSelectedFileType(type.key === selectedFileType ? '' : type.key)}
-                className={`file-type-button ${selectedFileType === type.key ? 'active-file-type' : ''}`}
-                style={{
-                  padding: '10px 15px',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  backgroundColor: selectedFileType === type.key ? '#e0f7fa' : '#fff',
-                  cursor: 'pointer',
-                  flex: '1 1 auto',
-                  textAlign: 'center',
-                  minWidth: '120px',
-                }}
-              >
-                {type.label}
-              </button>
-            ))}
-          </div>
-          {selectedFileType && (
-            <div className="download-button" style={{ marginTop: '15px' }}>
-              <button
-                className="download-btn"
-                onClick={() => downloadFile(SAMPLE_FILES[selectedFileType].key, SAMPLE_FILES[selectedFileType].name)}
-                disabled={isUploading}
-              >
-                Download {fileTypes.find((type) => type.key === selectedFileType)?.label} Sample CSV
-              </button>
-            </div>
-          )}
         </div>
     </main> 
-    </div>
   );
 };
 
